@@ -55,14 +55,16 @@ export default function Setup() {
             <button
               key={opt.level}
               onClick={() => setDifficulty(opt.level)}
-              className={`text-left relative transition-colors duration-300 ease-in-out group ${tilt}`}
+              className={`text-left relative transition-all duration-300 ease-in-out group ${
+                isSelected ? 'transform scale-105 z-10' : `hover:scale-105 ${tilt}`
+              }`}
             >
-              <div className={`absolute inset-0 rounded-2xl transition-opacity ${
+              <div className={`absolute inset-0 rounded-2xl shadow-xl transition-opacity ${
                 isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
               } ${opt.color}`}></div>
               
               <div className={`relative h-full bg-white rounded-2xl p-6 border-4 transition-colors ${
-                isSelected ? 'border-saas-ink' : 'border-transparent'
+                isSelected ? 'border-saas-ink' : 'border-transparent shadow-lg'
               }`}>
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-5 ${opt.color}`}>
                   <Icon size={24} className="text-saas-ink" />
@@ -86,7 +88,7 @@ export default function Setup() {
         </button>
         <button
           onClick={() => navigate('/interview')}
-          className="px-8 py-3 font-bold text-lg bg-saas-amber text-saas-ink hover:bg-orange-500 rounded-xl transition-colors"
+          className="px-8 py-3 font-bold text-lg bg-saas-amber text-saas-ink hover:bg-orange-500 rounded-xl shadow-lg hover:-translate-y-1 transition-all"
         >
           Connect to Coach
         </button>

@@ -61,22 +61,22 @@ export default function Interview() {
       {/* Bottom Controls */}
       <div className="w-full flex justify-center items-center gap-4 py-6 mt-2">
         
-        <button className="w-12 h-12 flex items-center justify-center rounded-xl bg-white border-2 border-saas-ink/20 hover:border-saas-ink text-saas-ink transition-colors">
+        <button className="w-12 h-12 flex items-center justify-center rounded-xl bg-white border-2 border-saas-ink/20 hover:border-saas-ink text-saas-ink transition-all shadow-sm hover:shadow-md">
           <Settings size={20} />
         </button>
 
-        <button className="w-12 h-12 flex items-center justify-center rounded-xl bg-white border-2 border-saas-ink/20 hover:border-saas-ink text-saas-ink transition-colors">
+        <button className="w-12 h-12 flex items-center justify-center rounded-xl bg-white border-2 border-saas-ink/20 hover:border-saas-ink text-saas-ink transition-all shadow-sm hover:shadow-md">
           <Volume2 size={20} />
         </button>
         
-        <button className="px-8 py-4 rounded-xl bg-white border-2 border-saas-ink text-saas-ink hover:bg-saas-ink hover:text-white transition-colors flex items-center gap-2 font-bold text-base">
+        <button className="px-8 py-4 rounded-xl bg-white border-2 border-saas-ink text-saas-ink hover:bg-saas-ink hover:text-white transition-all shadow-[0_4px_12px_rgba(15,27,45,0.1)] flex items-center gap-2 font-bold text-base">
           <Mic size={20} />
           Mute
         </button>
         
         <button 
           onClick={() => navigate('/')}
-          className="px-8 py-4 rounded-xl bg-red-500 hover:bg-red-600 text-white transition-colors flex items-center gap-2 font-bold text-base border-2 border-red-600"
+          className="px-8 py-4 rounded-xl bg-red-500 hover:bg-red-600 text-white transition-all shadow-[0_4px_12px_rgba(239,68,68,0.3)] flex items-center gap-2 font-bold text-base border-2 border-red-600"
         >
           <PhoneOff size={20} />
           End Call

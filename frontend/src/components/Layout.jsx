@@ -20,7 +20,7 @@ export default function Layout() {
             to="/" 
             className={`block px-4 py-3 font-semibold text-base transition-all rounded-xl ${
               location.pathname === '/' || location.pathname === '/setup'
-                ? 'bg-saas-ink text-white' 
+                ? 'bg-saas-ink text-white shadow-[0_4px_12px_rgba(15,27,45,0.15)]' 
                 : 'text-saas-ink hover:bg-white/50'
             }`}
           >
@@ -40,7 +40,7 @@ export default function Layout() {
         <div className="mt-auto bg-white/60 p-5 rounded-2xl">
           <p className="text-sm font-semibold mb-2">Need help?</p>
           <p className="text-xs text-saas-ink/70 mb-4">Check out our guide to acing your next interview.</p>
-          <button className="text-xs font-bold bg-white px-4 py-2 rounded-lg transition-colors w-full hover:bg-gray-50">
+          <button className="text-xs font-bold bg-white px-4 py-2 rounded-lg shadow-sm hover:shadow-md transition-shadow w-full">
             Read Guide
           </button>
         </div>
