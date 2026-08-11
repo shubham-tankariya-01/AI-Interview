@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+@theme {
+  --color-saas-ink: #0F1B2D;
+  --color-saas-amber: #F2A93B;
+  --color-saas-yellow: #FCE8A8;
+  --color-saas-blue: #C9D9F0;
+  --color-saas-peach: #F5EADB;
+  
+  --font-brand: "Bricolage Grotesque", sans-serif;
+  --font-body: "Plus Jakarta Sans", sans-serif;
+}
+
+body {
+  background-color: #ffffff;
+  color: var(--color-saas-ink);
+  font-family: var(--font-body);
+}
