@@ -1,6 +1,10 @@
-def main():
-    print("Hello from backend!")
+from fastapi import FastAPI
 
+app = FastAPI(title="AI-Interview")
 
-if __name__ == "__main__":
-    main()
+app.include_router()
+
+@app.get("/")
+def read_root():
+    return {"Hello": "World"}
+
