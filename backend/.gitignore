@@ -56,3 +56,4 @@ htmlcov/
 *.db
 
 info_learning 
+services/personas.py

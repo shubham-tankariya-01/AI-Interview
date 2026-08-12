@@ -7,6 +7,7 @@ from core.database import engine
 from models.base import Base
 from routes.interview import interview_router
 from routes.webSocket import ws_router
+import models.transcript
 
 
 #to also see info logs in terminal or whatever using (python logger by def hides info logs)
