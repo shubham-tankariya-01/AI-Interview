@@ -14,6 +14,7 @@ class ConnectionManager:
     async def connect(self, websocket: WebSocket, session_id: str):
        
         try:
+            #accepting the request
             await websocket.accept()
             
             # Initialize the list if this is the first connection for the session

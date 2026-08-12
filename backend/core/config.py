@@ -8,6 +8,9 @@ class Settings(BaseSettings):
     #database now
     DATABASE_URL: str = ""
 
+    #stt
+    WS_URL: str = ""
+
 
 
     model_config = SettingsConfigDict(

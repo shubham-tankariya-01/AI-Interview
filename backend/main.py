@@ -1,11 +1,16 @@
 from routes.interview import interview_router
 from fastapi import FastAPI
+import logging
+
 #internals
 from core.database import engine
 from models.base import Base
 from routes.interview import interview_router
 from routes.webSocket import ws_router
 
+
+#to also see info logs in terminal or whatever using (python logger by def hides info logs)
+logging.basicConfig(level=logging.INFO)
 
 #at starting connecting with db and creating tables if not exists
 Base.metadata.create_all(bind=engine)
