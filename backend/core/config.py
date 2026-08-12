@@ -12,6 +12,9 @@ class Settings(BaseSettings):
     WS_URL: str = ""
 
 
+    #llm
+    GEMINI_API_KEY :str = ""
+
 
     model_config = SettingsConfigDict(
         case_sensitive=True,
