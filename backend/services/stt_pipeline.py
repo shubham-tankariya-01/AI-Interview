@@ -1,3 +1,4 @@
+from services.ai_reasoning import generate_reply_stream
 import json
 import logging
 import asyncio
@@ -13,6 +14,15 @@ from models.interview import InterviewSession
 from services.session_memory import save_transcript, get_conversation_history
 from services.ai_reasoning import generate_reply
 from services.personas import get_persona
+
+#buffer to handle evry incomplete audio
+#---GLOBAL BUFFER DICTIONARY ---
+#Stores the accumulated text for each session until VAD says "utterance_end"
+
+session_transcripts = {}
+session_locks = {}
+session_debounce_tasks = {}
+
 
 #logger
 logger = logging.getLogger(__name__)
@@ -37,6 +47,12 @@ async def connect_to_stt(session_id : str):
 
         await stt_ws.send(json.dumps(start_config))
 
+        #empty string for the user
+        session_transcripts[session_id] = ""
+
+        if session_id not in session_locks:
+            session_locks[session_id] = asyncio.Lock()
+
         async def receive_transcripts_from_model():
             try:
                 async for msg in stt_ws:
@@ -45,47 +61,16 @@ async def connect_to_stt(session_id : str):
                         text = data.get("text", "")
                         if not text:
                             continue
-                            
-                        logger.info(f"STT Heard: {text}")
-
-                        try:
-
-                            # 1 database Operations
-                            # We open a session, do our DB work, and close it immediately.
-                            with SessionLocal() as db:
-                                # Save what the user just said
-                                save_transcript(db, session_id, "user", text)
-
-                                # Fetch the session to get the persona
-                                db_interview_session = db.query(InterviewSession).filter(
-                                    InterviewSession.session_id == session_id
-                                ).first()
-                                
-                                persona_name = db_interview_session.persona if db_interview_session else "default"
-                                persona_instructions = get_persona(persona_name)
-
-                                history_last_15 = get_conversation_history(db,session_id)
-                                #with ended here.....
-
-                            #2 LLM Call (Network phase)
-                            # CRITICAL: im doing this OUTSIDE the 'with SessionLocal() as db:' block bczz!
-                            # database connections shouldn't be held hostage while waiting for network APIs.
-                            ai_response = await generate_reply(history_last_15, persona=persona_instructions)
-
-                            # 3. Database Operations (Write Phase 2)
-                            # Open a fresh DB session just to save the AI's reply
-                            with SessionLocal() as db:
-                                save_transcript(db, session_id, "ai", ai_response)
-
-                            # 4. WebSocket Broadcast
-                            # Send the AI's text back to the frontend so it can be displayed
-                            active_websockets = manager.active_connections.get(session_id, [])
-                            for user_ws in active_websockets:
-                                await user_ws.send_text(f"AI: {ai_response}")
-                                
-                        except Exception as inner_e:
-                            logger.error(f"Error processing transcript for session {session_id}: {inner_e}")
-
+                        logger.info(f"STT Heard fragment: {text}")
+                        current_text = session_transcripts.get(session_id, "")
+                        session_transcripts[session_id] = current_text + " " + text
+                        
+                        # --- STT DEBOUNCE LOGIC ---
+                        existing_task = session_debounce_tasks.get(session_id)
+                        if existing_task and not existing_task.done():
+                            existing_task.cancel()
+                        session_debounce_tasks[session_id] = asyncio.create_task(debounce_finalize(session_id))
+                    
             except websockets.exceptions.ConnectionClosed:
                 logger.info("STT connection closed.")
 
@@ -96,3 +81,57 @@ async def connect_to_stt(session_id : str):
     except Exception as e:
         logger.error(f"Failed to connect to STT model: {e}")
         return None
+
+async def debounce_finalize(session_id: str):
+    """Waits 1.2s after the last STT fragment. If no new fragments arrive, finalizes the utterance."""
+    try:
+        await asyncio.sleep(1.2)
+        logger.info(f"[{session_id}] ⏱ STT Debounce timer expired (1.2s silence). Finalizing utterance.")
+        await handle_utterance_end(session_id)
+    except asyncio.CancelledError:
+        pass
+
+async def handle_utterance_end(session_id: str):
+
+    if session_id not in session_locks:
+        session_locks[session_id] = asyncio.Lock()
+        
+    async with session_locks[session_id]:
+        text = session_transcripts.get(session_id, "").strip()
+
+        if not text:
+            return
+        
+        session_transcripts[session_id] = ""
+    logger.info(f"[{session_id}] UTTERANCE END! Sending full sentence to Gemini: '{text}'")
+    try:
+        # --- FAKE DATABASE & GEMINI LOGIC FOR TESTING ---
+        logger.info(f"[{session_id}] 💾 (Simulated) Saved user transcript to Database")
+        logger.info(f"[{session_id}] 🧠 (Simulated) LLM Called with text: '{text}'")
+        
+        # 4. WebSocket Broadcast
+        active_websockets = manager.active_connections.get(session_id, [])
+        
+        # Broadcast the finalized user text IMMEDIATELY
+        for user_ws in active_websockets:
+            await user_ws.send_text(json.dumps({
+                "type": "user_final",
+                "text": text
+            }))
+            
+        # Simulate the AI responding after a tiny delay
+        import asyncio
+        await asyncio.sleep(1)
+        
+        fake_ai_response = "This is a fake AI response to test the WebSocket."
+        logger.info(f"[{session_id}] 💾 (Simulated) Saved AI transcript to Database: '{fake_ai_response}'")
+        
+        # Broadcast the AI response
+        for user_ws in active_websockets:
+            await user_ws.send_text(json.dumps({
+                "type": "ai_message",
+                "text": fake_ai_response
+            }))
+            
+    except Exception as e:
+        logger.error(f"Error processing transcript: {e}")

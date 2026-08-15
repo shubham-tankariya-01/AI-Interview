@@ -19,8 +19,8 @@ def _get_client():
                 logger.error("GEMINI_API key is missing in config/env!")
                 return None
                 
-            # Noteee : It must be genai.Client with a capital C 
-            _client = genai.Client(api_key=api_key)
+            
+            _client = genai.Client(api_key =api_key)
             logger.info("Gemini client initialized successfully.")
             
         return _client
@@ -30,7 +30,7 @@ def _get_client():
         return None
 
 
-MODEL_ANSWER = "gemini-2.5-flash"  #pick whatever model
+MODEL_ANSWER = "gemini-3.6-flash"  #pick whatever model
 
 async def generate_reply(context: str, persona: str) -> str:
     """
@@ -39,7 +39,7 @@ async def generate_reply(context: str, persona: str) -> str:
     client = _get_client()
     
     if not client:
-        return "System Error: AI Brain is currently offline due to missing configuration."
+        return "System Error: AI Client is currently offline due to missing configuration."
         
     try:
         # Noteeeeee : Because this is an async function calling the 'aio' (async) client, 
@@ -56,3 +56,25 @@ async def generate_reply(context: str, persona: str) -> str:
         # Return a safe fallback string so the TTS engine has something to speak,
         # instead of returning a raw Python Exception object which would crash it.
         return "I'm sorry, I encountered a brief error while thinking. Could you repeat that?"
+
+async def generate_reply_stream(context :str , persona : str):
+    #geeting the client 
+    client = _get_client()
+
+    if not client:
+        yield "System Error : AI client is currently Offline due to missign configuration"
+
+    try:
+        response_stream = await client.aio.models.generate_content_stream(
+            model = MODEL_ANSWER,
+            contents = context,
+            config=types.GenerateContentConfig(system_instruction=persona)
+        )
+
+        async for chunk in response_stream:
+            if chunk.text:
+                yield chunk.text
+                
+    except Exception as e:
+        logger.error(f"Error streaming AI reply: {e}")
+        yield " I'm sorry, I encountered a brief error while thinking."
