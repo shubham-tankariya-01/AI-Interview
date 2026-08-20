@@ -8,6 +8,8 @@ export default function Interview() {
 
   // Array of finalized messages: { type: "user_final" | "ai_message", text: "..." }
   const [messages, setMessages] = useState([]);
+  // State for real-time transcription text
+  const [interimText, setInterimText] = useState("");
 
   // Ref for auto-scrolling chat
   const messagesEndRef = useRef(null);
@@ -72,15 +74,18 @@ export default function Interview() {
 
     };
 
-    // 5. When the backend sends us finalized text (user or AI), display it!
+    // 5. When the backend sends us finalized text (user or AI) or interim text, display it!
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        if (data.type === "user_final" || data.type === "ai_message") {
+        if (data.type === "interim") {
+          setInterimText(data.text);
+        } else if (data.type === "user_final" || data.type === "ai_message") {
+          setInterimText(""); // clear interim when final arrives
           setMessages(prev => [...prev, data]);
         }
       } catch (e) {
-        // If it's not JSON (like the old raw string), ignore it or log it
+        // If it's not JSON, ignore it or log it
       }
     };
 
@@ -172,6 +177,14 @@ export default function Interview() {
                 {msg.text}
               </div>
             ))}
+            
+            {/* Real-time Interim Text */}
+            {interimText && (
+              <div className="max-w-[85%] rounded-2xl px-4 py-2 text-sm font-medium bg-saas-peach/60 text-saas-ink self-end rounded-tr-sm border border-saas-ink/10 shadow-sm animate-pulse">
+                <div className="text-[10px] opacity-50 mb-1">You (typing...)</div>
+                {interimText}
+              </div>
+            )}
             <div ref={messagesEndRef} />
           </div>
         </div>
